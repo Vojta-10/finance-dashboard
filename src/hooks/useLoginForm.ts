@@ -1,9 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth';
+import { useRouter } from 'next/navigation';
 
 export function useLoginForm() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -31,6 +33,7 @@ export function useLoginForm() {
       }, 5000);
       return;
     }
+    router.push('/dashboard');
   };
 
   return {
