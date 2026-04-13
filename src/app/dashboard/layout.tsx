@@ -1,17 +1,32 @@
 import { Box } from '@mui/material';
+import Sidebar from '../../components/dashboard/Sidebar';
+import { createClient } from '@/lib/supabase/server';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
-}: {children: React.ReactNode}) {
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const username = user?.user_metadata?.username;
+
   return (
     <>
-      <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'background.default' }}>
-      {/* We will build a Sidebar component and drop it right here later! */}
+      <Box
+        sx={{
+          display: 'flex',
+          minHeight: '100vh',
+          backgroundColor: 'background.default',
+        }}
+      >
+        <Sidebar username={username}></Sidebar>
 
-      <Box sx={{ flexGrow: 1, p: 3 }}>
-        {children}
+        <Box sx={{ flexGrow: 1, p: 3 }}>{children}</Box>
       </Box>
-    </Box>
     </>
   );
 }
