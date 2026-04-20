@@ -5,6 +5,7 @@ import { Divider, Drawer } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import CategoryIcon from '@mui/icons-material/Category';
 import { usePathname, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import SidebarFooter from './sidebar/SidebarFooter';
@@ -20,6 +21,11 @@ const navItems: NavItem[] = [
     text: 'Transactions',
     icon: ReceiptLongIcon,
     href: '/dashboard/transactions',
+  },
+  {
+    text: 'Categories',
+    icon: CategoryIcon,
+    href: '/dashboard/categories',
   },
 ];
 

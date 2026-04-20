@@ -15,18 +15,15 @@ export default async function DashboardLayout({
   const username = user?.user_metadata?.username;
 
   return (
-    <>
-      <Box
-        sx={{
-          display: 'flex',
-          minHeight: '100vh',
-          backgroundColor: 'background.default',
-        }}
-      >
-        <Sidebar username={username}></Sidebar>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+      }}
+    >
+      <Sidebar username={username}></Sidebar>
 
-        <Box sx={{ flexGrow: 1, p: 3 }}>{children}</Box>
-      </Box>
-    </>
+      <Box sx={{ flexGrow: 1, p: 3 }}>{children}</Box>
+    </Box>
   );
 }

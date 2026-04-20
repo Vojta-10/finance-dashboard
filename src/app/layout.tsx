@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import ThemeWrapper from '@/components/ThemeWrapper';
-import { CssBaseline } from '@mui/material';
 
 export const metadata: Metadata = {
   title: 'Personal Finance Dashboard',
@@ -16,7 +15,6 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <CssBaseline />
         <AppRouterCacheProvider>
           <ThemeWrapper>{children}</ThemeWrapper>
         </AppRouterCacheProvider>
