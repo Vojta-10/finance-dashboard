@@ -1,9 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { registerSchema, type RegisterFormValues } from '@/lib/schemas/auth';
+import { useRouter } from 'next/dist/client/components/navigation';
 
 export function useRegisterForm() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -36,10 +38,7 @@ export function useRegisterForm() {
       }, 5000);
       return;
     }
-
-    console.log(
-      'Registration successful, please check your email for confirmation',
-    );
+    router.push('/dashboard');
   };
 
   return {
