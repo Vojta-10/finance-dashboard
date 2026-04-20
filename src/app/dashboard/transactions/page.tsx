@@ -3,35 +3,18 @@
 import NewTransactionFormDialog from '@/components/dashboard/transactions/AddTansactionModal';
 import TransactionsTable from '@/components/dashboard/transactions/TransactionsTable';
 import TransactionsToolbar from '@/components/dashboard/transactions/TransactionsToolbar';
-import type {
-  ChipColor,
-  Transaction,
-} from '@/components/dashboard/transactions/types';
+import type { Transaction } from '@/components/dashboard/transactions/types';
 import { Box, Card, Typography, CircularProgress } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-
-const categoryColors: Record<string, ChipColor> = {
-  Entertainment: 'secondary', // Usually a purple/pink
-  Groceries: 'success', // Green
-  Transport: 'warning', // Orange
-  Utilities: 'info', // Blue
-};
-
-const categories = [
-  'All',
-  'Entertainment',
-  'Groceries',
-  'Transport',
-  'Utilities',
-];
+import type { Category } from '@/components/dashboard/categories/types';
 
 export default function TransactionsPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterCategory, setFilterCategory] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -45,6 +28,7 @@ export default function TransactionsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [orderBy, setOrderBy] = useState<string>('date');
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+  const [categories, setCategories] = useState<Category[]>([]);
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -64,6 +48,15 @@ export default function TransactionsPage() {
       clearTimeout(timer);
     };
   }, [searchInput]);
+
+  const fetchCategories = useCallback(async () => {
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+
+    if (data) setCategories(data);
+  }, [supabase]);
 
   const fetchTransactions = useCallback(async () => {
     const {
@@ -85,6 +78,10 @@ export default function TransactionsPage() {
       query = query.ilike('note', `%${debouncedSearch}%`);
     }
 
+    if (filterCategory) {
+      query = query.eq('category_id', filterCategory.trim());
+    }
+
     const { data, error } = await query
       .order(orderBy, { ascending: orderDirection === 'asc' })
       .order('created_at', { ascending: false });
@@ -95,14 +92,15 @@ export default function TransactionsPage() {
       setTransactions(data || []);
     }
     setIsLoading(false);
-  }, [supabase, debouncedSearch, orderBy, orderDirection]);
+  }, [supabase, debouncedSearch, orderBy, orderDirection, filterCategory]);
 
   useEffect(() => {
     const loadData = async () => {
       await fetchTransactions();
+      await fetchCategories();
     };
     loadData();
-  }, [fetchTransactions]);
+  }, [fetchTransactions, fetchCategories, filterCategory]);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -114,18 +112,10 @@ export default function TransactionsPage() {
     setOpenMenu(false);
   };
 
-  const filteredTransactions = transactions.filter((tx) => {
-    if (filterCategory === 'All') return true;
-    return tx.categories?.name === filterCategory;
-  });
-
-  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
+  const totalPages = Math.ceil(transactions.length / rowsPerPage);
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(
-    startIndex,
-    endIndex,
-  );
+  const paginatedTransactions = transactions.slice(startIndex, endIndex);
 
   const handleSelectAllClick = (checked: boolean) => {
     if (checked) {
@@ -217,6 +207,7 @@ export default function TransactionsPage() {
           setPage(1);
           fetchTransactions();
         }}
+        categories={categories}
       />
       <Card sx={{ mx: 4, p: 3, mt: 2, boxShadow: 1 }}>
         <Typography
@@ -255,7 +246,6 @@ export default function TransactionsPage() {
           <TransactionsTable
             paginatedTransactions={paginatedTransactions}
             selectedIds={selectedIds}
-            categoryColors={categoryColors}
             totalPages={totalPages}
             page={page}
             rowsPerPage={rowsPerPage}

@@ -24,33 +24,29 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
   transactionSchema,
   type TransactionFormData,
 } from '@/lib/schemas/transaction';
 import { supabase } from '@/lib/supabase/client';
 import { Transaction } from './types';
+import { Category } from '../categories/types';
 
 interface NewTransactionFormDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   transactionToEdit?: Transaction | null;
+  categories: Category[];
 }
-
-const categoryOptions = [
-  { id: '8bd64328-82f2-49f5-a77b-5be80aa10f92', name: 'Entertainment' },
-  { id: '50418ed4-8690-4410-8147-395dbce3ad9e', name: 'Groceries' },
-  { id: '150e2514-30fc-41c4-94bd-761a113fbfcf', name: 'Transport' },
-  { id: 'bcf5fbfe-2c1f-4504-9259-588849800540', name: 'Utilities' },
-];
 
 export default function NewTransactionFormDialog({
   open,
   onClose,
   onSuccess,
   transactionToEdit,
+  categories,
 }: NewTransactionFormDialogProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const isEditing = !!transactionToEdit;
@@ -61,6 +57,7 @@ export default function NewTransactionFormDialog({
     control,
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormData>({
@@ -74,16 +71,29 @@ export default function NewTransactionFormDialog({
     },
   });
 
+  const selectedType = useWatch({ control, name: 'type' });
+
+  useEffect(() => {
+    if (transactionToEdit) return;
+    setValue('category', '');
+  }, [selectedType, setValue, transactionToEdit]);
+
+  const categoryOptions = categories.filter((cat) => cat.type === selectedType);
+
   useEffect(() => {
     if (open && transactionToEdit) {
+      console.log(
+        'Editing transaction, pre-filling form with:',
+        transactionToEdit,
+      );
       reset({
         type: Number(transactionToEdit.amount) < 0 ? 'Expense' : 'Income',
         amount: Math.abs(Number(transactionToEdit.amount)),
         description: transactionToEdit.note,
 
         // THE FIX: Wrap it in String() to satisfy TypeScript and Zod
-        category: transactionToEdit.categories.id
-          ? String(transactionToEdit.categories.id)
+        category: transactionToEdit.category_id
+          ? transactionToEdit.category_id
           : '',
 
         date: transactionToEdit.date,
@@ -93,7 +103,7 @@ export default function NewTransactionFormDialog({
         type: 'Expense',
         date: new Date(),
         description: '',
-        category: '8bd64328-82f2-49f5-a77b-5be80aa10f92',
+        category: '',
         amount: 0,
       });
     }
@@ -126,7 +136,7 @@ export default function NewTransactionFormDialog({
     };
 
     if (isEditing) {
-      const { error } = await supabase
+      const {} = await supabase
         .from('transactions')
         .update(dbPayload)
         .eq('id', transactionToEdit.id);

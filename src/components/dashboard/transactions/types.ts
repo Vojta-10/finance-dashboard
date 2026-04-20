@@ -1,20 +1,11 @@
-export type ChipColor =
-  | 'default'
-  | 'primary'
-  | 'secondary'
-  | 'error'
-  | 'info'
-  | 'success'
-  | 'warning';
-
 export interface Transaction {
   id: number;
   date: string;
   note: string;
+  category_id: string;
   categories: {
     name: string;
-    color: ChipColor;
-    id: number;
+    color: string;
   };
   amount: string;
 }

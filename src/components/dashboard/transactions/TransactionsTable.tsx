@@ -14,14 +14,14 @@ import {
   TableSortLabel,
   Typography,
 } from '@mui/material';
-import type { ChipColor, Transaction } from './types';
+import { alpha } from '@mui/material/styles';
+import type { Transaction } from './types';
 import ActionMenu from './ActionMenu';
 
 interface TransactionsTableProps {
   paginatedTransactions: Transaction[];
   selectedIds: number[];
   setSelectedIds: (ids: number[]) => void;
-  categoryColors: Record<string, ChipColor>;
   totalPages: number;
   page: number;
   rowsPerPage: number;
@@ -57,6 +57,14 @@ export default function TransactionsTable({
   onRequestSort,
   orderDirection,
 }: TransactionsTableProps) {
+  const resolveCategoryColor = (value: string | undefined) => {
+    if (value && /^#[0-9A-Fa-f]{6}$/.test(value)) {
+      return value;
+    }
+
+    return '#9e9e9e';
+  };
+
   const formatTableDate = (dateString: string) => {
     if (!dateString) return '';
 
@@ -142,6 +150,8 @@ export default function TransactionsTable({
           <TableBody>
             {paginatedTransactions.map((tx) => {
               const isExpense = String(tx.amount).startsWith('-');
+              const chipColor = resolveCategoryColor(tx.categories?.color);
+
               return (
                 <TableRow
                   key={tx.id}
@@ -166,10 +176,14 @@ export default function TransactionsTable({
                   <TableCell>
                     <Chip
                       label={tx.categories?.name}
-                      color={tx.categories?.color || 'default'}
                       size='small'
                       variant='outlined'
-                      sx={{ fontWeight: 'bold' }}
+                      sx={{
+                        fontWeight: 'bold',
+                        color: chipColor,
+                        borderColor: chipColor,
+                        backgroundColor: alpha(chipColor, 0.08),
+                      }}
                     />
                   </TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>
