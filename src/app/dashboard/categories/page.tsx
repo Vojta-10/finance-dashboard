@@ -2,10 +2,8 @@
 
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import AddCategoryModal from '@/components/dashboard/categories/AddCategoryModal';
-import type {
-  Category,
-  CategoryType,
-} from '@/components/dashboard/categories/types';
+import type { Category } from '@/components/dashboard/categories/types';
+import { useData } from '@/context/DataContent';
 import { supabase } from '@/lib/supabase/client';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
@@ -20,17 +18,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const DEFAULT_CATEGORY_COLOR = '#9e9e9e';
-
-function normalizeCategoryType(value: unknown): CategoryType {
-  if (String(value).toLowerCase() === 'income') {
-    return 'Income';
-  }
-
-  return 'Expense';
-}
 
 function normalizeCategoryColor(value: unknown): string {
   const asString = String(value ?? '').trim();
@@ -156,8 +146,6 @@ function CategoryColumn({
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
@@ -166,49 +154,7 @@ export default function CategoriesPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchCategories = useCallback(async () => {
-    setPageError(null);
-    setIsLoading(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setPageError('You must be logged in to view categories.');
-      setIsLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('categories')
-      .select('id, name, color, type')
-      .eq('user_id', user.id)
-      .order('name', { ascending: true });
-
-    if (error) {
-      setPageError(error.message);
-      setCategories([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const normalized: Category[] = (data || []).map((item) => ({
-      id: String(item.id),
-      name: String(item.name ?? ''),
-      type: normalizeCategoryType(item.type),
-      color: normalizeCategoryColor(item.color),
-    }));
-
-    setCategories(normalized);
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void fetchCategories();
-    });
-  }, [fetchCategories]);
+  const { categories, isLoading, refreshCategories } = useData();
 
   const expenseCategories = useMemo(
     () => categories.filter((category) => category.type === 'Expense'),
@@ -261,7 +207,7 @@ export default function CategoriesPage() {
 
     setIsDeleting(false);
     setCategoryToDelete(null);
-    fetchCategories();
+    refreshCategories();
   };
 
   return (
@@ -270,7 +216,7 @@ export default function CategoriesPage() {
         open={isFormOpen}
         categoryToEdit={categoryToEdit}
         onClose={() => setIsFormOpen(false)}
-        onSuccess={fetchCategories}
+        onSuccess={refreshCategories}
       />
 
       <Card sx={{ p: { xs: 2, md: 3 }, mt: 2, boxShadow: 1 }}>

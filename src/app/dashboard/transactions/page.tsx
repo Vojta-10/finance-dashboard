@@ -5,34 +5,32 @@ import TransactionsTable from '@/components/dashboard/transactions/TransactionsT
 import TransactionsToolbar from '@/components/dashboard/transactions/TransactionsToolbar';
 import type { Transaction } from '@/components/dashboard/transactions/types';
 import { Box, Card, Typography, CircularProgress } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import type { Category } from '@/components/dashboard/categories/types';
+import { useData } from '@/context/DataContent';
 
 export default function TransactionsPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] =
     useState<Transaction | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [openMenu, setOpenMenu] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [orderBy, setOrderBy] = useState<string>('date');
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
-  const [categories, setCategories] = useState<Category[]>([]);
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
+  const { transactions, categories, refreshTransactions, isLoading } =
+    useData();
 
   const handleRequestSort = (field: string) => {
     const isAsc = orderBy === field && orderDirection === 'asc';
@@ -40,67 +38,12 @@ export default function TransactionsPage() {
     setOrderDirection(isAsc ? 'desc' : 'asc');
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 500);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [searchInput]);
+  const filteredTransactions = transactions.filter((tx) => {
+    if (!searchInput) return true;
+    if (!tx.note) return false;
 
-  const fetchCategories = useCallback(async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-
-    if (data) setCategories(data);
-  }, [supabase]);
-
-  const fetchTransactions = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.error('No user found');
-      setIsLoading(false);
-      return;
-    }
-
-    let query = supabase
-      .from('transactions')
-      .select('*, categories (name, color)')
-      .eq('user_id', user.id);
-
-    if (debouncedSearch) {
-      query = query.ilike('note', `%${debouncedSearch}%`);
-    }
-
-    if (filterCategory) {
-      query = query.eq('category_id', filterCategory.trim());
-    }
-
-    const { data, error } = await query
-      .order(orderBy, { ascending: orderDirection === 'asc' })
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
-    } else {
-      setTransactions(data || []);
-    }
-    setIsLoading(false);
-  }, [supabase, debouncedSearch, orderBy, orderDirection, filterCategory]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchTransactions();
-      await fetchCategories();
-    };
-    loadData();
-  }, [fetchTransactions, fetchCategories, filterCategory]);
+    return tx.note.toLowerCase().includes(searchInput.toLowerCase());
+  });
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -112,10 +55,13 @@ export default function TransactionsPage() {
     setOpenMenu(false);
   };
 
-  const totalPages = Math.ceil(transactions.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedTransactions = transactions.slice(startIndex, endIndex);
+  const paginatedTransactions = filteredTransactions.slice(
+    startIndex,
+    endIndex,
+  );
 
   const handleSelectAllClick = (checked: boolean) => {
     if (checked) {
@@ -177,7 +123,7 @@ export default function TransactionsPage() {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
       setSelectedIds([]);
-      fetchTransactions();
+      refreshTransactions();
 
       // TODO: Add a success toast/snackbar here!
     } catch (error) {
@@ -203,9 +149,9 @@ export default function TransactionsPage() {
         open={dialogOpen}
         transactionToEdit={transactionToEdit}
         onClose={() => setDialogOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
           setPage(1);
-          fetchTransactions();
+          await refreshTransactions();
         }}
         categories={categories}
       />

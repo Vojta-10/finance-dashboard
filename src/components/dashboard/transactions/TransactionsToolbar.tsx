@@ -104,7 +104,7 @@ export default function TransactionsToolbar({
             <Divider />
 
             <ListSubheader sx={{ fontWeight: 'bold', color: 'primary.main'}}>
-              Expenses
+              Expense
             </ListSubheader>
             {expenseCategories.map((category) => (
               <MenuItem key={category.id} value={category.id}>
