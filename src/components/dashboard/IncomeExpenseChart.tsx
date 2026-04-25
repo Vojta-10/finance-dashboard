@@ -101,7 +101,7 @@ export default function IncomeExpenseChart() {
                 tickLabelStyle: isMobile ? { fontSize: 10 } : {},
               },
             ]}
-            height={isMobile ? 250 : 300}
+            height={275}
             margin={{
               top: isMobile ? 40 : 20,
               bottom: 30,
