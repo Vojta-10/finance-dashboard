@@ -14,83 +14,17 @@ export default function TransactionsPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>('');
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] =
     useState<Transaction | null>(null);
-  const [openMenu, setOpenMenu] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-  const [orderBy, setOrderBy] = useState<string>('date');
-  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
-  const { transactions, categories, refreshTransactions, isLoading } =
-    useData();
-
-  const handleRequestSort = (field: string) => {
-    const isAsc = orderBy === field && orderDirection === 'asc';
-    setOrderBy(field);
-    setOrderDirection(isAsc ? 'desc' : 'asc');
-  };
-
-  const filteredTransactions = transactions.filter((tx) => {
-    if (!searchInput) return true;
-    if (!tx.note) return false;
-
-    return tx.note.toLowerCase().includes(searchInput.toLowerCase());
-  });
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-    setOpenMenu(true);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-    setOpenMenu(false);
-  };
-
-  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
-  const startIndex = (page - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(
-    startIndex,
-    endIndex,
-  );
-
-  const handleSelectAllClick = (checked: boolean) => {
-    if (checked) {
-      const newSelecteds = paginatedTransactions.map((n) => n.id);
-      setSelectedIds(newSelecteds);
-      return;
-    }
-    setSelectedIds([]);
-  };
-
-  const handleRowClick = (id: number) => {
-    const selectedIndex = selectedIds.indexOf(id);
-    let newSelected: number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selectedIds, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selectedIds.slice(1));
-    } else if (selectedIndex === selectedIds.length - 1) {
-      newSelected = newSelected.concat(selectedIds.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selectedIds.slice(0, selectedIndex),
-        selectedIds.slice(selectedIndex + 1),
-      );
-    }
-
-    setSelectedIds(newSelected);
-  };
+  const { categories, refreshTransactions, isLoading } = useData();
 
   const handleOpenAdd = () => {
     setTransactionToEdit(null);
@@ -102,21 +36,19 @@ export default function TransactionsPage() {
     setDialogOpen(true);
   };
 
-  const triggerDelete = () => {
+  const handleRequestDelete = (idsToDelete: number[]) => {
+    setSelectedIds(idsToDelete);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteSelected = async (idsToDelete: number[]) => {
-    // 1. The Confirmation Guard
-    // Prevents accidental clicks from wiping out data instantly
-    setIsDeleteDialogOpen(true);
+  const handleDeleteSelected = async () => {
     setIsDeleting(true);
 
     try {
       const { error } = await supabase
         .from('transactions')
         .delete()
-        .in('id', idsToDelete);
+        .in('id', selectedIds);
 
       if (error) throw error;
 
@@ -130,17 +62,9 @@ export default function TransactionsPage() {
       console.error('Error deleting transactions:', error);
       // TODO: Add an error toast/snackbar here so the user knows it failed!
       alert('Failed to delete transactions. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
-  };
-
-  const handleFilterChange = (category: string) => {
-    setFilterCategory(category);
-    setPage(1);
-  };
-
-  const handleRowsPerPageChange = (rows: number) => {
-    setRowsPerPage(rows);
-    setPage(1);
   };
 
   return (
@@ -166,14 +90,11 @@ export default function TransactionsPage() {
         </Typography>
         <TransactionsToolbar
           selectedCount={selectedIds.length}
-          filterCategory={filterCategory}
           categories={categories}
-          onDeleteSelected={triggerDelete}
-          onFilterChange={handleFilterChange}
+          onDeleteSelected={() => handleRequestDelete(selectedIds)}
           onOpenDialog={() => {
             handleOpenAdd();
           }}
-          selectedIds={selectedIds}
           searchInput={searchInput}
           onSearchChange={(e) => setSearchInput(e.target.value)}
         />
@@ -190,25 +111,13 @@ export default function TransactionsPage() {
           </Box>
         ) : (
           <TransactionsTable
-            paginatedTransactions={paginatedTransactions}
             selectedIds={selectedIds}
-            totalPages={totalPages}
             page={page}
-            rowsPerPage={rowsPerPage}
-            anchorEl={anchorEl}
-            onSelectAllChange={handleSelectAllClick}
-            onRowToggle={handleRowClick}
-            onOpenRowMenu={handleClick}
-            onCloseRowMenu={handleClose}
-            openMenu={openMenu}
-            onPageChange={setPage}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            handleDeleteSelected={triggerDelete}
+            setPage={setPage}
+            searchInput={searchInput}
+            onRequestDelete={handleRequestDelete}
             onOpenEdit={handleOpenEdit}
             setSelectedIds={setSelectedIds}
-            orderBy={orderBy}
-            onRequestSort={handleRequestSort}
-            orderDirection={orderDirection}
           />
         )}
         <ConfirmDialog
@@ -218,7 +127,7 @@ export default function TransactionsPage() {
           confirmText='Delete'
           isPending={isDeleting}
           onCancel={() => setIsDeleteDialogOpen(false)}
-          onConfirm={() => handleDeleteSelected(selectedIds)}
+          onConfirm={handleDeleteSelected}
         />
       </Card>
     </>

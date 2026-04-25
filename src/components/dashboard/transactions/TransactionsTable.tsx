@@ -18,52 +18,94 @@ import { alpha } from '@mui/material/styles';
 import type { Transaction } from './types';
 import ActionMenu from './ActionMenu';
 import { formatCurrency } from '@/utils/utils';
+import { useData } from '@/context/DataContent';
+import { useState } from 'react';
 
 interface TransactionsTableProps {
-  paginatedTransactions: Transaction[];
   selectedIds: number[];
   setSelectedIds: (ids: number[]) => void;
-  totalPages: number;
-  page: number;
-  rowsPerPage: number;
-  anchorEl: null | HTMLElement;
-  onSelectAllChange: (checked: boolean) => void;
-  onRowToggle: (id: number) => void;
-  onOpenRowMenu: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onCloseRowMenu: () => void;
-  onPageChange: (newPage: number) => void;
-  onRowsPerPageChange: (rows: number) => void;
-  openMenu: boolean;
-  handleDeleteSelected: (idsToDelete: number[]) => void;
+  setPage: (page: number) => void;
+  onRequestDelete: (idsToDelete: number[]) => void;
   onOpenEdit: (transaction: Transaction) => void;
-  orderBy: string;
-  onRequestSort: (field: string) => void;
-  orderDirection: 'asc' | 'desc';
+  searchInput: string;
+  page: number;
 }
 
 export default function TransactionsTable({
-  paginatedTransactions,
   selectedIds,
-  totalPages,
   page,
-  rowsPerPage,
-  onSelectAllChange,
-  onRowToggle,
-  onPageChange,
-  onRowsPerPageChange,
-  handleDeleteSelected,
+  setPage,
+  onRequestDelete,
   onOpenEdit,
   setSelectedIds,
-  orderBy,
-  onRequestSort,
-  orderDirection,
+  searchInput,
 }: TransactionsTableProps) {
+  const { transactions } = useData();
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [orderBy, setOrderBy] = useState<string>('date');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleRequestSort = (field: string) => {
+    const isAsc = orderBy === field && orderDirection === 'asc';
+    setOrderBy(field);
+    setOrderDirection(isAsc ? 'desc' : 'asc');
+  };
+
+  const filteredTransactions = transactions.filter((tx) => {
+    if (!searchInput) return true;
+    if (!tx.note) return false;
+
+    return tx.note.toLowerCase().includes(searchInput.toLowerCase());
+  });
+
+  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(
+    startIndex,
+    endIndex,
+  );
+
+  const handleSelectAllClick = (checked: boolean) => {
+    if (checked) {
+      const newSelecteds = paginatedTransactions.map((n) => n.id);
+      setSelectedIds(newSelecteds);
+      return;
+    }
+    setSelectedIds([]);
+  };
+
   const resolveCategoryColor = (value: string | undefined) => {
     if (value && /^#[0-9A-Fa-f]{6}$/.test(value)) {
       return value;
     }
 
     return '#9e9e9e';
+  };
+
+  const handleRowClick = (id: number) => {
+    const selectedIndex = selectedIds.indexOf(id);
+    let newSelected: number[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selectedIds, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selectedIds.slice(1));
+    } else if (selectedIndex === selectedIds.length - 1) {
+      newSelected = newSelected.concat(selectedIds.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selectedIds.slice(0, selectedIndex),
+        selectedIds.slice(selectedIndex + 1),
+      );
+    }
+
+    setSelectedIds(newSelected);
+  };
+
+  const handleRowsPerPageChange = (rows: number) => {
+    setRowsPerPage(rows);
+    setPage(1);
   };
 
   const formatTableDate = (dateString: string) => {
@@ -96,7 +138,9 @@ export default function TransactionsTable({
                     paginatedTransactions.length > 0 &&
                     selectedIds.length === paginatedTransactions.length
                   }
-                  onChange={(event) => onSelectAllChange(event.target.checked)}
+                  onChange={(event) =>
+                    handleSelectAllClick(event.target.checked)
+                  }
                   indeterminate={
                     selectedIds.length > 0 &&
                     selectedIds.length < paginatedTransactions.length
@@ -112,7 +156,7 @@ export default function TransactionsTable({
                 <TableSortLabel
                   active={orderBy === 'type'}
                   direction={orderDirection}
-                  onClick={() => onRequestSort('type')}
+                  onClick={() => handleRequestSort('type')}
                 >
                   Type
                 </TableSortLabel>
@@ -121,7 +165,7 @@ export default function TransactionsTable({
                 <TableSortLabel
                   active={orderBy === 'date'}
                   direction={orderDirection}
-                  onClick={() => onRequestSort('date')}
+                  onClick={() => handleRequestSort('date')}
                 >
                   Date
                 </TableSortLabel>
@@ -130,7 +174,7 @@ export default function TransactionsTable({
                 <TableSortLabel
                   active={orderBy === 'note'}
                   direction={orderDirection}
-                  onClick={() => onRequestSort('note')}
+                  onClick={() => handleRequestSort('note')}
                 >
                   Description
                 </TableSortLabel>
@@ -140,7 +184,7 @@ export default function TransactionsTable({
                 <TableSortLabel
                   active={orderBy === 'amount'}
                   direction={orderDirection}
-                  onClick={() => onRequestSort('amount')}
+                  onClick={() => handleRequestSort('amount')}
                 >
                   Amount
                 </TableSortLabel>
@@ -163,7 +207,7 @@ export default function TransactionsTable({
                     <Checkbox
                       color='primary'
                       checked={selectedIds.includes(tx.id)}
-                      onChange={() => onRowToggle(tx.id)}
+                      onChange={() => handleRowClick(tx.id)}
                       slotProps={{
                         input: {
                           'aria-label': `Select transaction ${tx.note}`,
@@ -196,11 +240,7 @@ export default function TransactionsTable({
                   </TableCell>
                   <TableCell>
                     <ActionMenu
-                      transactionId={tx.id}
-                      onDelete={() => {
-                        setSelectedIds([tx.id]);
-                        handleDeleteSelected(selectedIds);
-                      }}
+                      onDelete={() => onRequestDelete([tx.id])}
                       onEdit={() => onOpenEdit(tx)}
                     />
                   </TableCell>
@@ -226,7 +266,7 @@ export default function TransactionsTable({
           size='small'
           count={totalPages}
           page={page}
-          onChange={(_, newPage) => onPageChange(newPage)}
+          onChange={(_, newPage) => setPage(newPage)}
           showFirstButton
           showLastButton
         />
@@ -248,7 +288,7 @@ export default function TransactionsTable({
             <NativeSelect
               value={rowsPerPage}
               onChange={(e) =>
-                onRowsPerPageChange(parseInt(e.target.value, 10))
+                handleRowsPerPageChange(parseInt(e.target.value, 10))
               }
               slotProps={{
                 input: {

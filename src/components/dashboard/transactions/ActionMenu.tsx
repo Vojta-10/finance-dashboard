@@ -14,16 +14,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 interface ActionMenuProps {
-  transactionId: number;
-  onDelete: (ids: number[]) => void;
+  onDelete: () => void;
   onEdit: () => void;
 }
 
-export default function ActionMenu({
-  transactionId,
-  onDelete,
-  onEdit,
-}: ActionMenuProps) {
+export default function ActionMenu({ onDelete, onEdit }: ActionMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -41,7 +36,7 @@ export default function ActionMenu({
   };
 
   const handleDelete = () => {
-    onDelete([transactionId]); // Pass the ID up as an array
+    onDelete();
     handleClose();
   };
 

@@ -12,33 +12,35 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
+import { useState } from 'react';
 import { Category } from '../categories/types';
 
 interface TransactionsToolbarProps {
   selectedCount: number;
-  filterCategory: string;
   categories: Category[];
-  onDeleteSelected: (idsToDelete: number[]) => void;
-  onFilterChange: (category: string) => void;
+  onDeleteSelected: () => void;
   onOpenDialog: () => void;
-  selectedIds: number[];
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   searchInput: string;
 }
 
 export default function TransactionsToolbar({
   selectedCount,
-  filterCategory,
   categories,
   onDeleteSelected,
-  onFilterChange,
   onOpenDialog,
-  selectedIds,
   onSearchChange,
   searchInput,
 }: TransactionsToolbarProps) {
+  const [filterCategory, setFilterCategory] = useState('');
+
   const expenseCategories = categories.filter((cat) => cat.type === 'Expense');
   const incomeCategories = categories.filter((cat) => cat.type === 'Income');
+
+  const handleFilterChange = (category: string) => {
+    setFilterCategory(category);
+  };
+
   return (
     <Box
       sx={{
@@ -73,7 +75,7 @@ export default function TransactionsToolbar({
           <span>
             <IconButton
               color='error'
-              onClick={() => onDeleteSelected(selectedIds)}
+              onClick={onDeleteSelected}
               disabled={selectedCount === 0}
               aria-label='Delete selected transactions'
             >
@@ -91,11 +93,7 @@ export default function TransactionsToolbar({
             id='filter-select'
             label='Filter by Category'
             value={filterCategory}
-            onChange={(e) =>
-              onFilterChange(
-                categories.find((cat) => cat.id === e.target.value)?.id || '',
-              )
-            }
+            onChange={(e) => handleFilterChange(e.target.value)}
             displayEmpty
           >
             <MenuItem value=''>
@@ -103,7 +101,7 @@ export default function TransactionsToolbar({
             </MenuItem>
             <Divider />
 
-            <ListSubheader sx={{ fontWeight: 'bold', color: 'primary.main'}}>
+            <ListSubheader sx={{ fontWeight: 'bold', color: 'primary.main' }}>
               Expense
             </ListSubheader>
             {expenseCategories.map((category) => (
@@ -111,7 +109,7 @@ export default function TransactionsToolbar({
                 {category.name}
               </MenuItem>
             ))}
-            <ListSubheader sx={{ fontWeight: 'bold', color: 'primary.main'}}>
+            <ListSubheader sx={{ fontWeight: 'bold', color: 'primary.main' }}>
               Income
             </ListSubheader>
             {incomeCategories.map((category) => (
