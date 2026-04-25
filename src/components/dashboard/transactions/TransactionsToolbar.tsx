@@ -12,7 +12,6 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import { useState } from 'react';
 import { Category } from '../categories/types';
 
 interface TransactionsToolbarProps {
@@ -22,6 +21,8 @@ interface TransactionsToolbarProps {
   onOpenDialog: () => void;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   searchInput: string;
+  filterCategory: string;
+  handleFilterChange: (category: string) => void;
 }
 
 export default function TransactionsToolbar({
@@ -31,15 +32,11 @@ export default function TransactionsToolbar({
   onOpenDialog,
   onSearchChange,
   searchInput,
+  filterCategory,
+  handleFilterChange,
 }: TransactionsToolbarProps) {
-  const [filterCategory, setFilterCategory] = useState('');
-
   const expenseCategories = categories.filter((cat) => cat.type === 'Expense');
   const incomeCategories = categories.filter((cat) => cat.type === 'Income');
-
-  const handleFilterChange = (category: string) => {
-    setFilterCategory(category);
-  };
 
   return (
     <Box

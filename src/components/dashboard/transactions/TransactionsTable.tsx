@@ -29,6 +29,7 @@ interface TransactionsTableProps {
   onOpenEdit: (transaction: Transaction) => void;
   searchInput: string;
   page: number;
+  filterCategory: string;
 }
 
 export default function TransactionsTable({
@@ -39,6 +40,7 @@ export default function TransactionsTable({
   onOpenEdit,
   setSelectedIds,
   searchInput,
+  filterCategory,
 }: TransactionsTableProps) {
   const { transactions } = useData();
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -51,12 +53,18 @@ export default function TransactionsTable({
     setOrderDirection(isAsc ? 'desc' : 'asc');
   };
 
-  const filteredTransactions = transactions.filter((tx) => {
+  let filteredTransactions = transactions.filter((tx) => {
     if (!searchInput) return true;
     if (!tx.note) return false;
 
     return tx.note.toLowerCase().includes(searchInput.toLowerCase());
   });
+
+  if (filterCategory) {
+    filteredTransactions = filteredTransactions.filter(
+      (tx) => tx.category_id === filterCategory,
+    );
+  }
 
   const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
   const startIndex = (page - 1) * rowsPerPage;

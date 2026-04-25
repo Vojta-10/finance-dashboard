@@ -19,6 +19,11 @@ export default function TransactionsPage() {
   const [transactionToEdit, setTransactionToEdit] =
     useState<Transaction | null>(null);
   const [searchInput, setSearchInput] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+
+  const handleFilterChange = (category: string) => {
+    setFilterCategory(category);
+  };
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -97,6 +102,8 @@ export default function TransactionsPage() {
           }}
           searchInput={searchInput}
           onSearchChange={(e) => setSearchInput(e.target.value)}
+          filterCategory={filterCategory}
+          handleFilterChange={handleFilterChange}
         />
         {isLoading ? (
           <Box
@@ -118,6 +125,7 @@ export default function TransactionsPage() {
             onRequestDelete={handleRequestDelete}
             onOpenEdit={handleOpenEdit}
             setSelectedIds={setSelectedIds}
+            filterCategory={filterCategory}
           />
         )}
         <ConfirmDialog
