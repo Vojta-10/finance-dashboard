@@ -17,6 +17,7 @@ import {
 import { alpha } from '@mui/material/styles';
 import type { Transaction } from './types';
 import ActionMenu from './ActionMenu';
+import { formatCurrency } from '@/utils/utils';
 
 interface TransactionsTableProps {
   paginatedTransactions: Transaction[];
@@ -190,7 +191,7 @@ export default function TransactionsTable({
                     <Typography
                       color={isExpense ? 'error.main' : 'success.main'}
                     >
-                      {tx.amount}$
+                      {formatCurrency(Number(tx.amount))}
                     </Typography>
                   </TableCell>
                   <TableCell>

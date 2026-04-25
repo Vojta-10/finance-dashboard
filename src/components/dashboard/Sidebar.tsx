@@ -3,6 +3,7 @@
 import React from 'react';
 import { Divider, Drawer } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
+import type { DrawerProps } from '@mui/material/Drawer';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -13,7 +14,7 @@ import SidebarHeader from './sidebar/SidebarHeader';
 import SidebarNavList from './sidebar/SidebarNavList';
 import type { NavItem } from './sidebar/types';
 
-const DRAWER_WIDTH = 240;
+export const DRAWER_WIDTH = 240;
 
 const navItems: NavItem[] = [
   { text: 'Overview', icon: DashboardIcon, href: '/dashboard' },
@@ -35,7 +36,23 @@ const navButtonSx: SxProps<Theme> = {
   borderRadius: 1,
 };
 
-export default function Sidebar({ username }: { username?: string }) {
+type SidebarProps = {
+  username?: string;
+  variant?: DrawerProps['variant'];
+  open?: boolean;
+  onClose?: () => void;
+  onNavigate?: () => void;
+  sx?: SxProps<Theme>;
+};
+
+export default function Sidebar({
+  username,
+  variant = 'permanent',
+  open,
+  onClose,
+  onNavigate,
+  sx,
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -54,19 +71,27 @@ export default function Sidebar({ username }: { username?: string }) {
     router.refresh();
   }, [router, supabase]);
 
+  const drawerSx: SxProps<Theme> = {
+    width: DRAWER_WIDTH,
+    flexShrink: 0,
+    ...(variant === 'permanent'
+      ? { display: { xs: 'none', md: 'block' } }
+      : {}),
+    '& .MuiDrawer-paper': {
+      width: DRAWER_WIDTH,
+      boxSizing: 'border-box',
+      borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+      backgroundColor: 'background.paper',
+    },
+  };
+
   return (
     <Drawer
-      variant='permanent'
-      sx={{
-        width: DRAWER_WIDTH,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: DRAWER_WIDTH,
-          boxSizing: 'border-box',
-          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-          backgroundColor: 'background.paper',
-        },
-      }}
+      variant={variant}
+      open={open}
+      onClose={onClose}
+      ModalProps={{ keepMounted: true }}
+      sx={sx ? ([drawerSx, sx] as SxProps<Theme>) : drawerSx}
     >
       <SidebarHeader username={username} />
 
@@ -76,6 +101,7 @@ export default function Sidebar({ username }: { username?: string }) {
         items={navItems}
         pathname={pathname}
         itemSx={navButtonSx}
+        onItemClick={onNavigate}
       />
 
       <Divider />

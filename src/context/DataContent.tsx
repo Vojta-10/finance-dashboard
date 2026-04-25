@@ -61,32 +61,48 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshAll = useCallback(async () => {
+    setIsLoading(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
-    // Fetch both in parallel for maximum speed!
-    const [txResponse, catResponse] = await Promise.all([
-      supabase
-        .from('transactions')
-        .select('*, categories (name, color, type)')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false }),
-      supabase.from('categories').select('*').order('name'),
-    ]);
-
-    if (txResponse.data) setTransactions(txResponse.data);
-    if (catResponse.data) setCategories(catResponse.data);
-    setIsLoading(false);
-  }, []);
+    try {
+      // Fetch both in parallel for maximum speed!
+      await Promise.all([refreshTransactions(), refreshCategories()]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshTransactions, refreshCategories]);
 
   // Fetch exactly once when the app loads
   useEffect(() => {
     const loadData = async () => {
       await refreshAll();
     };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN') {
+          refreshAll();
+        } else if (event === 'SIGNED_OUT') {
+          setTransactions([]);
+          setCategories([]);
+          setIsLoading(false);
+        }
+      },
+    );
+
     loadData();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [refreshAll]);
 
   return (

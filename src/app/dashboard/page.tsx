@@ -1,25 +1,38 @@
 'use client';
 
-import { CircularProgress, Grid } from '@mui/material';
+import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 import SummaryCard from '@/components/dashboard/SummaryCard';
 import RecentStack from '@/components/dashboard/RecentStack';
 import ExpenseChart from '@/components/dashboard/ExpenseChart';
 import IncomeExpenseChart from '@/components/dashboard/IncomeExpenseChart';
 import { useData } from '@/context/DataContent';
+import { formatCurrency } from '@/utils/utils';
 
 export default function DashboardPage() {
-  const { transactions, categories, isLoading } = useData();
+  const { transactions, isLoading } = useData();
 
-  if (isLoading) return <CircularProgress />;
-  console.log(transactions);
+  if (isLoading)
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
+        <CircularProgress size={50} />
+      </Box>
+    );
 
   const totalIncome = transactions
     .filter((tx) => tx.categories.type === 'Income')
     .reduce((sum, tx) => sum + Number(tx.amount), 0);
+
   const totalExpense = transactions
     .filter((tx) => tx.categories.type === 'Expense')
     .reduce((sum, tx) => sum + Number(tx.amount), 0);
-  console.log(totalExpense, totalIncome);
+
   const balance = totalIncome + totalExpense;
 
   const monthlyIncome = transactions
@@ -46,41 +59,57 @@ export default function DashboardPage() {
     })
     .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
-
   return (
-    <Grid container spacing={3} rowSpacing={5}>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <SummaryCard
-          title='Total Balance'
-          amount={`$${balance.toFixed(2)}`}
-          type='balance'
-        />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <SummaryCard
-          title='Monthly Income'
-          amount={`$${monthlyIncome.toFixed(2)}`}
-          type='income'
-        />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <SummaryCard
-          title='Monthly Expenses'
-          amount={`$${monthlyExpense.toFixed(2).slice(1)}`}
-          type='expense'
-        />
-      </Grid>
+    <Box>
+      <Typography
+        variant='h4'
+        sx={{
+          fontWeight: 700,
+          fontSize: { xs: '1.5rem', md: '2rem' },
+          mb: { xs: 2, md: 3 },
+        }}
+      >
+        Dashboard
+      </Typography>
 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ExpenseChart></ExpenseChart>
-      </Grid>
-      <Grid size={{ xs: 12, md: 8 }}>
-        <IncomeExpenseChart></IncomeExpenseChart>
-      </Grid>
+      <Grid
+        container
+        spacing={{ xs: 1.5, md: 3 }}
+        rowSpacing={{ xs: 2, md: 4 }}
+      >
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SummaryCard
+            title='Total Balance'
+            amount={formatCurrency(balance)}
+            type='balance'
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SummaryCard
+            title='Monthly Income'
+            amount={formatCurrency(monthlyIncome)}
+            type='income'
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SummaryCard
+            title='Monthly Expenses'
+            amount={formatCurrency(Math.abs(monthlyExpense))}
+            type='expense'
+          />
+        </Grid>
 
-      <Grid size={{ xs: 12 }}>
-        <RecentStack></RecentStack>
+        <Grid size={{ xs: 12, md: 12, lg: 4 }}>
+          <ExpenseChart></ExpenseChart>
+        </Grid>
+        <Grid size={{ xs: 12, md: 12, lg: 8 }}>
+          <IncomeExpenseChart></IncomeExpenseChart>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <RecentStack></RecentStack>
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 }

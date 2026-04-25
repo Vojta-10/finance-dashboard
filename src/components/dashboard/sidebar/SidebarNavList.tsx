@@ -13,12 +13,14 @@ type SidebarNavListProps = {
   items: NavItem[];
   pathname: string;
   itemSx: SxProps<Theme>;
+  onItemClick?: () => void;
 };
 
 export default function SidebarNavList({
   items,
   pathname,
   itemSx,
+  onItemClick,
 }: SidebarNavListProps) {
   return (
     <List sx={{ flexGrow: 1, my: 3 }} disablePadding>
@@ -31,6 +33,7 @@ export default function SidebarNavList({
             <ListItemButton
               component={NextLink}
               href={item.href}
+              onClick={onItemClick}
               selected={isActive}
               sx={itemSx}
             >

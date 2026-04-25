@@ -23,20 +23,25 @@ export default function SummaryCard({ title, amount, type }: SummaryCardProps) {
 
   const { icon, color } = getCardStyles();
   return (
-    <Card sx={{ height: '100%', borderRadius: 2, boxShadow: 1 }}>
-      <CardContent>
+    <Card sx={{ height: '100%', borderRadius: 2, boxShadow: 1, minWidth: 0 }}>
+      <CardContent
+        sx={{
+          p: { xs: 1.5, sm: 3 },
+          '&:last-child': { pb: { xs: 1.5, sm: 3 } },
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 2,
+            mb: { xs: 1.5, md: 2 },
           }}
         >
           <Typography
             variant='h6'
             color='text.secondary'
-            sx={{ fontWeight: 500 }}
+            sx={{ fontWeight: 500, fontSize: { xs: '0.95rem', md: '1.1rem' } }}
           >
             {title}
           </Typography>
@@ -54,7 +59,10 @@ export default function SummaryCard({ title, amount, type }: SummaryCardProps) {
           </Box>
         </Box>
 
-        <Typography variant='h4' sx={{ fontWeight: 700 }}>
+        <Typography
+          variant='h4'
+          sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', md: '2rem' } }}
+        >
           {amount}
         </Typography>
       </CardContent>

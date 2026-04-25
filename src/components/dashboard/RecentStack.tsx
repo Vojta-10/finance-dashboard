@@ -1,60 +1,99 @@
-import { Card, Typography, Box } from '@mui/material';
+import { useData } from '@/context/DataContent';
+import { Card, Typography, Box, Chip } from '@mui/material';
 import Stack from '@mui/material/Stack';
-
-const dummyTransactions = [
-  { id: 1, title: 'Grocery Store', date: 'Oct 12, 2023', amount: '-$45.00' },
-  { id: 2, title: 'Salary Deposit', date: 'Oct 10, 2023', amount: '+$3,200.00' },
-  { id: 3, title: 'Electric Bill', date: 'Oct 08, 2023', amount: '-$120.00' },
-  { id: 4, title: 'Coffee Shop', date: 'Oct 08, 2023', amount: '-$4.50' },
-  { id: 5, title: 'Internet Service', date: 'Oct 05, 2023', amount: '-$75.00' },
-];
+import { formatCurrency } from '@/utils/utils';
 
 export default function RecentStack() {
+  const { transactions } = useData();
+  const recentTransactions = transactions.slice(0, 5);
+
   return (
-    <Card sx={{ p: 3 }}>
+    <Card sx={{ p: { xs: 1.5, sm: 3 }, minWidth: 0, overflow: 'hidden' }}>
       <Typography variant='h6' gutterBottom>
         Recent Transactions
       </Typography>
 
-      <Stack sx={{ mt: 2 }}>
-        {dummyTransactions.map((transaction) => (
-          <Box
-            key={transaction.id}
-            sx={{
-              p: 2,
-              backgroundColor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <Box>
-              <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                {transaction.title}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {transaction.date}
-              </Typography>
-            </Box>
-
-            {/* Right Side: Amount */}
-            <Typography
-              variant='body1'
+      {recentTransactions.length === 0 ? (
+        <Typography variant='body1' color='text.secondary' textAlign='center'>
+          No transactions yet. Start adding some!
+        </Typography>
+      ) : (
+        <Stack sx={{ mt: { xs: 1.5, md: 2 }, gap: { xs: 1, md: 1.25 } }}>
+          {recentTransactions.map((transaction) => (
+            <Box
+              key={transaction.id}
               sx={{
-                fontWeight: 'bold',
-                color: transaction.amount.startsWith('+')
-                  ? 'success.main'
-                  : 'error.main',
+                p: { xs: 1.5, md: 2 },
+                backgroundColor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: { xs: 1, sm: 2 },
               }}
             >
-              {transaction.amount}
-            </Typography>
-          </Box>
-        ))}
-      </Stack>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant='body1' noWrap sx={{ fontWeight: 500 }}>
+                  {transaction.note || 'No description'}
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {transaction.date.toString().split('T')[0]}
+                </Typography>
+
+                <Chip
+                  label={transaction.categories?.name}
+                  variant='outlined'
+                  sx={{
+                    display: { xs: 'inline-flex', sm: 'none' },
+                    mt: 1,
+                    color: transaction.categories?.color,
+                    fontWeight: 'bold',
+                    borderColor: transaction.categories?.color,
+                    maxWidth: '100%',
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  display: { xs: 'none', sm: 'flex' },
+                  justifyContent: 'flex-start',
+                  px: 1,
+                }}
+              >
+                <Chip
+                  label={transaction.categories?.name}
+                  variant='outlined'
+                  sx={{
+                    color: transaction.categories?.color,
+                    fontWeight: 'bold',
+                    borderColor: transaction.categories?.color,
+                  }}
+                />
+              </Box>
+
+              {/* Right Side: Amount */}
+              <Typography
+                variant='body1'
+                sx={{
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  color:
+                    transaction.categories.type === 'Income'
+                      ? 'success.main'
+                      : 'error.main',
+                }}
+              >
+                {formatCurrency(Number(transaction.amount))}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      )}
     </Card>
   );
 }

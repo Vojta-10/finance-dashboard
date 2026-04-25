@@ -1,6 +1,6 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-const theme = createTheme({
+let theme = createTheme({
   palette: {
     // The background of the app. A very soft gray makes the white dashboard cards pop.
     background: {
@@ -15,7 +15,7 @@ const theme = createTheme({
     },
     // Secondary color (useful for floating action buttons or accents)
     secondary: {
-      main: '#9c27b0', 
+      main: '#9c27b0',
     },
     // Financial colors: Success (Income) and Error (Expenses)
     success: {
@@ -43,19 +43,21 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: 'none', // Stops MUI from making all buttons UPPERCASE by default
-          borderRadius: 8,       // Gives buttons a modern, slightly rounded look
+          borderRadius: 8, // Gives buttons a modern, slightly rounded look
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,      // Makes our dashboard cards look softer and more modern
+          borderRadius: 12, // Makes our dashboard cards look softer and more modern
           boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', // A very soft, modern shadow
         },
       },
     },
   },
 });
+
+theme = responsiveFontSizes(theme);
 
 export default theme;
