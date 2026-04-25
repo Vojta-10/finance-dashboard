@@ -1,36 +1,150 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance Dashboard
 
-## Getting Started
+Live URL: [Paste your Vercel URL here]
 
-First, run the development server:
+Screenshots:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- ![Dashboard Overview](./screenshots/dashboard-overview.png)
+- ![Transactions Page](./screenshots/transactions-page.png)
+- ![Categories Page](./screenshots/categories-page.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Finance Dashboard is a personal finance dashboard for tracking income, expenses, categories, and recent activity in one place.
+It includes authentication, transaction management, category management, summary analytics, and responsive dashboard charts.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+Based on the current package.json dependencies.
 
-To learn more about Next.js, take a look at the following resources:
+### Core
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 16.2.3
+- React 19.2.4
+- React DOM 19.2.4
+- TypeScript 5
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### UI
 
-## Deploy on Vercel
+- Material UI 7.3.9
+- MUI Icons 7.3.9
+- MUI Next.js integration 7.3.9
+- Emotion React 11.14.0
+- Emotion Styled 11.14.1
+- MUI X Charts 9.0.1
+- MUI X Date Pickers 9.0.0
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Backend and Auth
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Supabase SSR 0.10.2
+- Supabase JS 2.102.1
+
+### Forms and Validation
+
+- React Hook Form 7.72.1
+- Zod 4.3.6
+- Hookform Resolvers 5.2.2
+
+### Utilities and Tooling
+
+- date-fns 4.1.0
+- ESLint 9
+- eslint-config-next 16.2.2
+
+## Features
+
+### Authentication and Session Handling
+
+- User registration with username, email, password, and confirm-password validation
+- User login with credential validation and error handling
+- Supabase auth integration for client and server
+- Route protection and session refresh via middleware/proxy logic
+- Logout from dashboard sidebar
+
+### Dashboard Experience
+
+- Responsive dashboard layout with:
+  - Permanent sidebar on desktop
+  - Mobile app bar + temporary drawer on small screens
+- Overview cards for:
+  - Total balance
+  - Monthly income
+  - Monthly expenses
+- Responsive chart widgets:
+  - Expense distribution pie chart by category
+  - Income vs expense bar chart (recent months)
+- Recent transactions list with category chips and amount coloring
+
+### Transactions Management
+
+- Search transactions by description
+- Filter UI for category selection
+- Sortable transaction table columns
+- Row selection with bulk selection support
+- Delete confirmation flow for destructive actions
+- Add and edit transaction modal
+- Date picker and form validation
+
+### Categories Management
+
+- Separate Income and Expense category groups
+- Add category modal with validation
+- Edit category support
+- Delete category confirmation flow
+- Category color support with hex normalization and preview
+
+### Data Layer
+
+- Centralized data context for transactions and categories
+- Shared loading state
+- Refresh helpers for transactions, categories, and full refresh
+- Supabase queries with user scoping and ordering
+
+## Local Setup
+
+### 1. Clone the repository
+
+- git clone <your-repo-url>
+- cd finance-dashboard
+
+### 2. Install dependencies
+
+- npm install
+
+### 3. Create environment variables
+
+Create a file named .env.local in the project root and add:
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+### 4. Run the development server
+
+- npm run dev
+
+### 5. Open the app
+
+Go to:
+
+- http://localhost:3000
+
+## Available Scripts
+
+- npm run dev: Start development server
+- npm run build: Build for production
+- npm run start: Start production server
+- npm run lint: Run ESLint
+
+## Deployment
+
+Deploy easily on Vercel:
+
+- Connect the repository
+- Add the same environment variables from .env.local in Vercel project settings
+- Deploy
+
+## Notes
+
+- This app uses Supabase for authentication and database operations.
+- Protected routing is handled through server-side session checks and middleware-style proxy logic.
+- UI is built with Material UI and is responsive across desktop and mobile screen sizes.
