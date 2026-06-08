@@ -1,6 +1,6 @@
 # Finance Dashboard
 
-Live URL: [Paste your Vercel URL here]
+Live URL: https://finance-dashboard-silk-nu.vercel.app/login
 
 Screenshots:
 
