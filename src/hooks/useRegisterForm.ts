@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase/client';
 import { registerSchema, type RegisterFormValues } from '@/lib/schemas/auth';
-import { useRouter } from 'next/dist/client/components/navigation';
+import { useRouter } from 'next/navigation';
 
 export function useRegisterForm() {
   const router = useRouter();
